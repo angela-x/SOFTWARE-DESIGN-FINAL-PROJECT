@@ -1,0 +1,639 @@
+{
+  "info": {
+    "name": "Library System API",
+    "description": "CPE 114 Final Project – Complete Postman collection for the Library System REST API. Covers all CRUD endpoints for Authors, Books, and Members, plus relationship-specific borrow/return endpoints.",
+    "_postman_id": "cpe114-library-api-collection",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Authors",
+      "description": "CRUD endpoints for managing Authors. Each Book must belong to one Author.",
+      "item": [
+        {
+          "name": "Get All Authors",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/authors",
+              "host": ["{{base_url}}"],
+              "path": ["authors"]
+            },
+            "description": "Returns an array of all authors in the database."
+          },
+          "response": [
+            {
+              "name": "200 OK – List of authors",
+              "status": "OK",
+              "code": 200,
+              "body": "[{\"id\":1,\"name\":\"Jose Rizal\",\"nationality\":\"Filipino\",\"birthYear\":1861,\"createdAt\":\"2024-01-01T00:00:00.000Z\",\"updatedAt\":\"2024-01-01T00:00:00.000Z\"}]"
+            }
+          ]
+        },
+        {
+          "name": "Get Author by ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/authors/1",
+              "host": ["{{base_url}}"],
+              "path": ["authors", "1"]
+            },
+            "description": "Returns a single author by ID, including a list of their books. Returns 404 if the author does not exist."
+          },
+          "response": [
+            {
+              "name": "200 OK – Author with books",
+              "status": "OK",
+              "code": 200,
+              "body": "{\"id\":1,\"name\":\"Jose Rizal\",\"nationality\":\"Filipino\",\"birthYear\":1861,\"Books\":[{\"id\":1,\"title\":\"Noli Me Tangere\",\"isbn\":\"978-0-14-310-529-1\",\"genre\":\"Novel\"}]}"
+            },
+            {
+              "name": "404 Not Found",
+              "status": "Not Found",
+              "code": 404,
+              "body": "{\"error\":\"Author not found\"}"
+            }
+          ]
+        },
+        {
+          "name": "Create Author",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/authors",
+              "host": ["{{base_url}}"],
+              "path": ["authors"]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Jose Rizal\",\n  \"nationality\": \"Filipino\",\n  \"birthYear\": 1861\n}",
+              "options": {
+                "raw": { "language": "json" }
+              }
+            },
+            "description": "Creates a new author. The 'name' field is required. Returns 201 on success, 400 if name is missing."
+          },
+          "response": [
+            {
+              "name": "201 Created",
+              "status": "Created",
+              "code": 201,
+              "body": "{\"id\":1,\"name\":\"Jose Rizal\",\"nationality\":\"Filipino\",\"birthYear\":1861,\"createdAt\":\"2024-01-01T00:00:00.000Z\",\"updatedAt\":\"2024-01-01T00:00:00.000Z\"}"
+            },
+            {
+              "name": "400 Bad Request – Missing name",
+              "status": "Bad Request",
+              "code": 400,
+              "body": "{\"error\":\"name is required\"}"
+            }
+          ]
+        },
+        {
+          "name": "Update Author",
+          "request": {
+            "method": "PUT",
+            "url": {
+              "raw": "{{base_url}}/authors/1",
+              "host": ["{{base_url}}"],
+              "path": ["authors", "1"]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Jose Protasio Rizal\",\n  \"nationality\": \"Filipino\",\n  \"birthYear\": 1861\n}",
+              "options": {
+                "raw": { "language": "json" }
+              }
+            },
+            "description": "Updates an existing author by ID. Returns 404 if the author does not exist."
+          },
+          "response": [
+            {
+              "name": "200 OK – Updated author",
+              "status": "OK",
+              "code": 200,
+              "body": "{\"id\":1,\"name\":\"Jose Protasio Rizal\",\"nationality\":\"Filipino\",\"birthYear\":1861,\"updatedAt\":\"2024-06-01T00:00:00.000Z\"}"
+            },
+            {
+              "name": "404 Not Found",
+              "status": "Not Found",
+              "code": 404,
+              "body": "{\"error\":\"Author not found\"}"
+            }
+          ]
+        },
+        {
+          "name": "Delete Author",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{base_url}}/authors/1",
+              "host": ["{{base_url}}"],
+              "path": ["authors", "1"]
+            },
+            "description": "Deletes an author by ID. Returns 404 if the author does not exist. Note: deletion will fail if the author has books (foreign key constraint)."
+          },
+          "response": [
+            {
+              "name": "200 OK – Deleted",
+              "status": "OK",
+              "code": 200,
+              "body": "{\"message\":\"Author deleted successfully\"}"
+            },
+            {
+              "name": "404 Not Found",
+              "status": "Not Found",
+              "code": 404,
+              "body": "{\"error\":\"Author not found\"}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Books",
+      "description": "CRUD endpoints for managing Books. Each book belongs to one Author (one-to-many) and can be borrowed by many Members (many-to-many via Borrow).",
+      "item": [
+        {
+          "name": "Get All Books",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/books",
+              "host": ["{{base_url}}"],
+              "path": ["books"]
+            },
+            "description": "Returns an array of all books, each including their associated author's id and name."
+          },
+          "response": [
+            {
+              "name": "200 OK – List of books with author",
+              "status": "OK",
+              "code": 200,
+              "body": "[{\"id\":1,\"title\":\"Noli Me Tangere\",\"isbn\":\"978-0-14-310-529-1\",\"publishedYear\":1887,\"genre\":\"Novel\",\"copiesAvailable\":3,\"AuthorId\":1,\"Author\":{\"id\":1,\"name\":\"Jose Rizal\"}}]"
+            }
+          ]
+        },
+        {
+          "name": "Get Book by ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/books/1",
+              "host": ["{{base_url}}"],
+              "path": ["books", "1"]
+            },
+            "description": "Returns a single book by ID, including the author details and all members who have borrowed it with borrow metadata. Returns 404 if not found."
+          },
+          "response": [
+            {
+              "name": "200 OK – Book with author and borrowers",
+              "status": "OK",
+              "code": 200,
+              "body": "{\"id\":1,\"title\":\"Noli Me Tangere\",\"isbn\":\"978-0-14-310-529-1\",\"Author\":{\"id\":1,\"name\":\"Jose Rizal\",\"nationality\":\"Filipino\"},\"Members\":[{\"id\":1,\"name\":\"Maria Santos\",\"email\":\"maria@email.com\",\"Borrow\":{\"borrowDate\":\"2024-06-01\",\"returnDate\":null,\"status\":\"borrowed\"}}]}"
+            },
+            {
+              "name": "404 Not Found",
+              "status": "Not Found",
+              "code": 404,
+              "body": "{\"error\":\"Book not found\"}"
+            }
+          ]
+        },
+        {
+          "name": "Create Book",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/books",
+              "host": ["{{base_url}}"],
+              "path": ["books"]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Noli Me Tangere\",\n  \"isbn\": \"978-0-14-310-529-1\",\n  \"AuthorId\": 1,\n  \"publishedYear\": 1887,\n  \"genre\": \"Novel\",\n  \"copiesAvailable\": 3\n}",
+              "options": {
+                "raw": { "language": "json" }
+              }
+            },
+            "description": "Creates a new book. 'title', 'isbn', and 'AuthorId' are required. Returns 400 if any are missing, if the AuthorId does not exist, or if the ISBN is already taken. Returns 201 on success."
+          },
+          "response": [
+            {
+              "name": "201 Created",
+              "status": "Created",
+              "code": 201,
+              "body": "{\"id\":1,\"title\":\"Noli Me Tangere\",\"isbn\":\"978-0-14-310-529-1\",\"publishedYear\":1887,\"genre\":\"Novel\",\"copiesAvailable\":3,\"AuthorId\":1}"
+            },
+            {
+              "name": "400 Bad Request – Missing fields",
+              "status": "Bad Request",
+              "code": 400,
+              "body": "{\"error\":\"title, isbn, and AuthorId are required\"}"
+            },
+            {
+              "name": "400 Bad Request – Duplicate ISBN",
+              "status": "Bad Request",
+              "code": 400,
+              "body": "{\"error\":\"A book with this ISBN already exists\"}"
+            }
+          ]
+        },
+        {
+          "name": "Update Book",
+          "request": {
+            "method": "PUT",
+            "url": {
+              "raw": "{{base_url}}/books/1",
+              "host": ["{{base_url}}"],
+              "path": ["books", "1"]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Noli Me Tangere (Updated Edition)\",\n  \"copiesAvailable\": 5\n}",
+              "options": {
+                "raw": { "language": "json" }
+              }
+            },
+            "description": "Updates an existing book by ID. All fields are optional. Returns 404 if the book does not exist."
+          },
+          "response": [
+            {
+              "name": "200 OK – Updated book",
+              "status": "OK",
+              "code": 200,
+              "body": "{\"id\":1,\"title\":\"Noli Me Tangere (Updated Edition)\",\"copiesAvailable\":5}"
+            },
+            {
+              "name": "404 Not Found",
+              "status": "Not Found",
+              "code": 404,
+              "body": "{\"error\":\"Book not found\"}"
+            }
+          ]
+        },
+        {
+          "name": "Delete Book",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{base_url}}/books/1",
+              "host": ["{{base_url}}"],
+              "path": ["books", "1"]
+            },
+            "description": "Deletes a book by ID. Returns 404 if the book does not exist."
+          },
+          "response": [
+            {
+              "name": "200 OK – Deleted",
+              "status": "OK",
+              "code": 200,
+              "body": "{\"message\":\"Book deleted successfully\"}"
+            },
+            {
+              "name": "404 Not Found",
+              "status": "Not Found",
+              "code": 404,
+              "body": "{\"error\":\"Book not found\"}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Members",
+      "description": "CRUD endpoints for managing library Members.",
+      "item": [
+        {
+          "name": "Get All Members",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/members",
+              "host": ["{{base_url}}"],
+              "path": ["members"]
+            },
+            "description": "Returns an array of all registered library members."
+          },
+          "response": [
+            {
+              "name": "200 OK – List of members",
+              "status": "OK",
+              "code": 200,
+              "body": "[{\"id\":1,\"name\":\"Maria Santos\",\"email\":\"maria@email.com\",\"phone\":\"09171234567\",\"membershipDate\":\"2024-01-15\"}]"
+            }
+          ]
+        },
+        {
+          "name": "Get Member by ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/members/1",
+              "host": ["{{base_url}}"],
+              "path": ["members", "1"]
+            },
+            "description": "Returns a single member by ID, including all books they have borrowed with borrow status and dates. Returns 404 if not found."
+          },
+          "response": [
+            {
+              "name": "200 OK – Member with borrowed books",
+              "status": "OK",
+              "code": 200,
+              "body": "{\"id\":1,\"name\":\"Maria Santos\",\"email\":\"maria@email.com\",\"Books\":[{\"id\":1,\"title\":\"Noli Me Tangere\",\"isbn\":\"978-0-14-310-529-1\",\"Borrow\":{\"borrowDate\":\"2024-06-01\",\"returnDate\":null,\"status\":\"borrowed\"}}]}"
+            },
+            {
+              "name": "404 Not Found",
+              "status": "Not Found",
+              "code": 404,
+              "body": "{\"error\":\"Member not found\"}"
+            }
+          ]
+        },
+        {
+          "name": "Create Member",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/members",
+              "host": ["{{base_url}}"],
+              "path": ["members"]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Maria Santos\",\n  \"email\": \"maria@email.com\",\n  \"phone\": \"09171234567\",\n  \"membershipDate\": \"2024-01-15\"\n}",
+              "options": {
+                "raw": { "language": "json" }
+              }
+            },
+            "description": "Registers a new library member. 'name' and 'email' are required. Email must be valid and unique. Returns 201 on success, 400 for invalid or duplicate input."
+          },
+          "response": [
+            {
+              "name": "201 Created",
+              "status": "Created",
+              "code": 201,
+              "body": "{\"id\":1,\"name\":\"Maria Santos\",\"email\":\"maria@email.com\",\"phone\":\"09171234567\",\"membershipDate\":\"2024-01-15\"}"
+            },
+            {
+              "name": "400 Bad Request – Missing fields",
+              "status": "Bad Request",
+              "code": 400,
+              "body": "{\"error\":\"name and email are required\"}"
+            },
+            {
+              "name": "400 Bad Request – Duplicate email",
+              "status": "Bad Request",
+              "code": 400,
+              "body": "{\"error\":\"A member with this email already exists\"}"
+            }
+          ]
+        },
+        {
+          "name": "Update Member",
+          "request": {
+            "method": "PUT",
+            "url": {
+              "raw": "{{base_url}}/members/1",
+              "host": ["{{base_url}}"],
+              "path": ["members", "1"]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Maria Clara Santos\",\n  \"phone\": \"09179999999\"\n}",
+              "options": {
+                "raw": { "language": "json" }
+              }
+            },
+            "description": "Updates an existing member by ID. All fields are optional. Returns 404 if the member does not exist."
+          },
+          "response": [
+            {
+              "name": "200 OK – Updated member",
+              "status": "OK",
+              "code": 200,
+              "body": "{\"id\":1,\"name\":\"Maria Clara Santos\",\"email\":\"maria@email.com\",\"phone\":\"09179999999\"}"
+            },
+            {
+              "name": "404 Not Found",
+              "status": "Not Found",
+              "code": 404,
+              "body": "{\"error\":\"Member not found\"}"
+            }
+          ]
+        },
+        {
+          "name": "Delete Member",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{base_url}}/members/1",
+              "host": ["{{base_url}}"],
+              "path": ["members", "1"]
+            },
+            "description": "Deletes a member by ID. Returns 404 if the member does not exist."
+          },
+          "response": [
+            {
+              "name": "200 OK – Deleted",
+              "status": "OK",
+              "code": 200,
+              "body": "{\"message\":\"Member deleted successfully\"}"
+            },
+            {
+              "name": "404 Not Found",
+              "status": "Not Found",
+              "code": 404,
+              "body": "{\"error\":\"Member not found\"}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Borrow & Return",
+      "description": "Relationship-specific endpoints for the many-to-many relationship between Members and Books. Handles borrowing, returning, and listing a member's borrow history.",
+      "item": [
+        {
+          "name": "Borrow a Book",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/members/1/borrow/1",
+              "host": ["{{base_url}}"],
+              "path": ["members", "1", "borrow", "1"]
+            },
+            "description": "Assigns a book to a member as borrowed. Decrements copiesAvailable by 1. Returns 400 if no copies are available or if the member already has an active borrow for that book. Returns 404 if either the member or book does not exist."
+          },
+          "response": [
+            {
+              "name": "201 Created – Borrow record created",
+              "status": "Created",
+              "code": 201,
+              "body": "{\"message\":\"Book borrowed successfully\",\"borrow\":{\"id\":1,\"MemberId\":1,\"BookId\":1,\"borrowDate\":\"2024-06-01\",\"returnDate\":null,\"status\":\"borrowed\"}}"
+            },
+            {
+              "name": "400 Bad Request – No copies available",
+              "status": "Bad Request",
+              "code": 400,
+              "body": "{\"error\":\"No copies available for this book\"}"
+            },
+            {
+              "name": "400 Bad Request – Already borrowed",
+              "status": "Bad Request",
+              "code": 400,
+              "body": "{\"error\":\"Member already has an active borrow for this book\"}"
+            },
+            {
+              "name": "404 Not Found – Member or book missing",
+              "status": "Not Found",
+              "code": 404,
+              "body": "{\"error\":\"Member not found\"}"
+            }
+          ]
+        },
+        {
+          "name": "Return a Book",
+          "request": {
+            "method": "PUT",
+            "url": {
+              "raw": "{{base_url}}/members/1/return/1",
+              "host": ["{{base_url}}"],
+              "path": ["members", "1", "return", "1"]
+            },
+            "description": "Marks a borrowed book as returned. Sets returnDate to today and status to 'returned'. Increments copiesAvailable by 1. Returns 404 if no active borrow record is found for the member-book pair."
+          },
+          "response": [
+            {
+              "name": "200 OK – Book returned",
+              "status": "OK",
+              "code": 200,
+              "body": "{\"message\":\"Book returned successfully\",\"borrow\":{\"id\":1,\"MemberId\":1,\"BookId\":1,\"borrowDate\":\"2024-06-01\",\"returnDate\":\"2024-06-15\",\"status\":\"returned\"}}"
+            },
+            {
+              "name": "404 Not Found – No active borrow record",
+              "status": "Not Found",
+              "code": 404,
+              "body": "{\"error\":\"No active borrow record found for this member and book\"}"
+            }
+          ]
+        },
+        {
+          "name": "Get Member's Borrow History",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/members/1/books",
+              "host": ["{{base_url}}"],
+              "path": ["members", "1", "books"]
+            },
+            "description": "Returns all borrow records for a given member, including book details and borrow metadata (dates, status). Returns 404 if the member does not exist."
+          },
+          "response": [
+            {
+              "name": "200 OK – Borrow history",
+              "status": "OK",
+              "code": 200,
+              "body": "[{\"id\":1,\"borrowDate\":\"2024-06-01\",\"returnDate\":\"2024-06-15\",\"status\":\"returned\",\"Book\":{\"id\":1,\"title\":\"Noli Me Tangere\",\"isbn\":\"978-0-14-310-529-1\",\"genre\":\"Novel\"}},{\"id\":2,\"borrowDate\":\"2024-07-01\",\"returnDate\":null,\"status\":\"borrowed\",\"Book\":{\"id\":2,\"title\":\"El Filibusterismo\",\"isbn\":\"978-0-14-310-530-7\",\"genre\":\"Novel\"}}]"
+            },
+            {
+              "name": "404 Not Found",
+              "status": "Not Found",
+              "code": 404,
+              "body": "{\"error\":\"Member not found\"}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Health & Error Handling",
+      "description": "Tests for the health check route and the global 404 catch-all for undefined routes.",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/",
+              "host": ["{{base_url}}"],
+              "path": [""]
+            },
+            "description": "Confirms the server is running. Returns a simple status message."
+          },
+          "response": [
+            {
+              "name": "200 OK – Server is up",
+              "status": "OK",
+              "code": 200,
+              "body": "{\"message\":\"Library API is running\"}"
+            }
+          ]
+        },
+        {
+          "name": "Undefined Route (404 Catch-All)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/undefined-route",
+              "host": ["{{base_url}}"],
+              "path": ["undefined-route"]
+            },
+            "description": "Tests the global 404 catch-all middleware. Any request to an undefined route should return a JSON 404 error."
+          },
+          "response": [
+            {
+              "name": "404 – Route not found",
+              "status": "Not Found",
+              "code": 404,
+              "body": "{\"error\":\"Route not found: GET /undefined-route\"}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
