@@ -29,7 +29,7 @@ The API enforces basic inventory rules: a book cannot be borrowed if no copies a
 
 ### 1. Clone the repository
 ```bash
-git clone <your-repo-url>
+git clone https://github.com/angela-x/SOFTWARE-DESIGN-FINAL-PROJECT
 cd library-api
 ```
 
